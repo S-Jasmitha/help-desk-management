@@ -10,17 +10,41 @@ pipeline {
         stage('Checkout') {
             steps { checkout scm }
         }
-        stage('Validate') {
-            steps {
-                powershell 'if (!(Test-Path "${VERSION}/index.html")) { throw "Missing version index.html" }'
-                powershell 'if (!(Test-Path "${VERSION}/Dockerfile")) { throw "Missing version Dockerfile" }'
+        
+stage('Validate') {
+    steps {
+        powershell '''
+            $version = $env:VERSION
+
+            if (!(Test-Path "$version/index.html")) {
+                throw "Missing $version/index.html"
             }
-        }
-        stage('Build Docker Image') {
-            steps {
-                powershell 'docker build -t "${IMAGE_NAME}:${VERSION}" "${VERSION}"'
+
+            if (!(Test-Path "$version/Dockerfile")) {
+                throw "Missing $version/Dockerfile"
             }
-        }
+
+            Write-Host "Validation successful for $version"
+        '''
+    }
+}
+
+stage('Build Docker Image') {
+    steps {
+        powershell '''
+            $version = $env:VERSION
+            $tag = "$($env:IMAGE_NAME):$version"
+
+            docker build -t $tag $version
+
+            if ($LASTEXITCODE -ne 0) {
+                exit $LASTEXITCODE
+            }
+        '''
+    }
+}
+
+        
         stage('Push to DockerHub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
