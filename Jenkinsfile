@@ -32,7 +32,9 @@ stage('Validate') {
 stage('Build Docker Image') {
     steps {
         powershell '''
-            $docker = "$env:LOCALAPPDATA\\Programs\\DockerDesktop\\resources\\bin\\docker.exe"
+            $env:PATH = "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin;$env:PATH"
+
+            $docker = "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin\docker.exe"
             $version = $env:VERSION
             $imageName = $env:IMAGE_NAME
 
@@ -48,7 +50,6 @@ stage('Build Docker Image') {
 
             Write-Host "Version: $version"
             Write-Host "Image tag: $tag"
-            Write-Host "Build folder: $version"
 
             & $docker build -t $tag $version
 
