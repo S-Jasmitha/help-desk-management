@@ -4,7 +4,7 @@ pipeline {
         choice(name: 'VERSION', choices: ['v1', 'v2', 'v3'], description: 'Version to build')
     }
     environment {
-        IMAGE_NAME = 'YOUR_DOCKERHUB_USERNAME/help-desk-management'
+        IMAGE_NAME = 'jasmi4/help-desk-management'
     }
     stages {
         stage('Checkout') {
@@ -32,10 +32,25 @@ stage('Validate') {
 stage('Build Docker Image') {
     steps {
         powershell '''
+            $docker = "$env:LOCALAPPDATA\\Programs\\DockerDesktop\\resources\\bin\\docker.exe"
             $version = $env:VERSION
-            $tag = "$($env:IMAGE_NAME):$version"
+            $imageName = $env:IMAGE_NAME
 
-            docker build -t $tag $version
+            if ([string]::IsNullOrWhiteSpace($version)) {
+                throw "VERSION parameter is empty"
+            }
+
+            if ([string]::IsNullOrWhiteSpace($imageName)) {
+                throw "IMAGE_NAME is empty"
+            }
+
+            $tag = "${imageName}:${version}"
+
+            Write-Host "Version: $version"
+            Write-Host "Image tag: $tag"
+            Write-Host "Build folder: $version"
+
+            & $docker build -t $tag $version
 
             if ($LASTEXITCODE -ne 0) {
                 exit $LASTEXITCODE
