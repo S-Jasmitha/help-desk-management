@@ -29,12 +29,14 @@ stage('Validate') {
     }
 }
 
+
 stage('Build Docker Image') {
     steps {
         powershell '''
-            $env:PATH = "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin;$env:PATH"
+            $dockerBin = Join-Path $env:LOCALAPPDATA 'Programs/DockerDesktop/resources/bin'
+            $env:PATH = "$dockerBin;$env:PATH"
 
-            $docker = "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin\docker.exe"
+            $docker = Join-Path $dockerBin 'docker.exe'
             $version = $env:VERSION
             $imageName = $env:IMAGE_NAME
 
